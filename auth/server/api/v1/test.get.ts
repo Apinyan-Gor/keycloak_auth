@@ -1,8 +1,8 @@
-export default defineNuxtConfig({
-  devtools: { enabled: true },
-  typescript: {
-    strict: true,
-    typeCheck: true
-  },
-  // Дополнительные настройки для API и Swagger добавим позже
+/**
+ * Health check endpoint
+ * @summary Health check
+ * @tags Health
+ */
+export default defineEventHandler(() => {
+  return { ok: true, env: process.env.NODE_ENV || 'development' }
 })

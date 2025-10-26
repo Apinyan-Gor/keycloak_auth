@@ -1,4 +1,15 @@
-# Nuxt dev/build outputs
+node_modules/
+.nuxt/
+/.output/
+dist/
+*.local
+*.log
+.env
+database.db
+*.sqlite
+coverage/
+/.idea/
+/.vscode/# Nuxt dev/build outputs
 .output
 .data
 .nuxt
