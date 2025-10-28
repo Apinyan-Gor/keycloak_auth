@@ -1,0 +1,33 @@
+{
+  "id": "app",
+  "realm": "app",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "nuxt",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "secret": "i2jfiwijefj",
+      "redirectUris": ["http://localhost:3000/*", "http://host.docker.internal:3000/*"],
+      "directAccessGrantsEnabled": true,
+      "standardFlowEnabled": true,
+      "attributes": {}
+    }
+  ],
+  "users": [
+    {
+      "username": "admin",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "admin",
+          "temporary": false
+        }
+      ]
+    }
+  ],
+  "roles": {},
+  "eventsListeners": []
+}

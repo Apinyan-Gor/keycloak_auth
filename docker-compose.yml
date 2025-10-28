@@ -1,41 +1,104 @@
+version: '2.4'
+
 services:
-  keycloak:
-    image: quay.io/keycloak/keycloak:latest
-    container_name: keycloak
+  postgres:
+    image: postgres:15.6
+    container_name: postgres_db
+    volumes:
+      - ./postgres/data:/var/lib/postgresql/data
+      - ./postgres/initdb:/docker-entrypoint-initdb.d:ro
+    environment:
+      POSTGRES_DB: keycloak_auth
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgrespw
     ports:
-      - "8080:8080"
-    env_file:
-      - .env  # Подхватывает общие переменные из .env
+      - "5432:5432"
+    networks:
+      - app-network
+
+  keycloak:
+    # Pin to a known stable Keycloak version to avoid unexpected migration issues with the latest image
+    image: quay.io/keycloak/keycloak:23.0.7
+    container_name: keycloak_web
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_auth
+      KC_DB_USERNAME: postgres
+      KC_DB_PASSWORD: postgrespw
+      KC_HTTP_RELATIVE_PATH: /keycloak
+
+      KC_HOSTNAME: localhost
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+
+      KC_LOG_LEVEL: info
+      KC_METRICS_ENABLED: true
+      KC_HEALTH_ENABLED: true
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
     command: start-dev
+    ports:
+      - "8180:8080"
     depends_on:
-      - nuxt-app  # Запускается после Nuxt (опционально)
+      - postgres
+    # Do not publish Keycloak port directly — access via nginx reverse-proxy only
     networks:
       - app-network
 
   nuxt-app:
     build:
-      context: .  # Использует текущую папку (твой проект Nuxt)
-      dockerfile_inline: |  # Встроенный Dockerfile прямо здесь (всё в одном файле!)
-        FROM node:20
-        WORKDIR /app
-        COPY ./auth/package*.json ./
-        RUN npm install
-        COPY ./auth .
-        EXPOSE 3000
-        CMD ["npm", "run", "dev"]
+      context: ./auth  # Корень проекта (где package.json)
+      args:  # Передаёт vars из .env в build (замени на реальные, если не в .env)
+        - DATABASE_URL=${DATABASE_URL}
+        - DIRECT_URL=${DIRECT_URL}
     container_name: nuxt-app
-    ports:
-      - "3000:3000"
+    restart: unless-stopped
+    # Do not expose nuxt directly on the host; nginx will proxy to it
     volumes:
-      - .:/app  # Для hot-reload в dev
-      - /app/node_modules
+      - ./auth/app:/app  # Hot-reload: монтирует реальную папку с Nuxt-приложением (contains package.json)
+      - /app/node_modules  # Избегает конфликта с host node_modules
+    ports:
+      - 3001:3000
     env_file:
-      - .env  # Подхватывает общие переменные (например, DATABASE_URL для Prisma)
+      - .env  # Runtime vars для Nuxt (process.env.DATABASE_URL и т.д.)
     environment:
-      NODE_ENV: development  # Можно переопределить, если нужно
+      NODE_ENV: development
+      HOST: 0.0.0.0
     networks:
       - app-network
+    depends_on:
+      - postgres
+      - keycloak
 
+  nginx:
+    image: nginx:stable
+    container_name: nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    networks:
+      - app-network
+    depends_on:
+      - keycloak
+      - nuxt-app
+  
+  # nginx:
+  #   image: nginx:stable
+  #   container_name: nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8080:80"
+  #   volumes:
+  #     - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+  #   networks:
+  #     - app-network
+  #   depends_on:
+  #     - keycloak
+  #     - nuxt-app
+  #   # depends_on:  # Если Prisma init зависит от БД — добавь db-сервис, но для SQLite не нужно
+  #   #   - db  # Пример, если перейдёшь на Postgres
 
 networks:
   app-network:

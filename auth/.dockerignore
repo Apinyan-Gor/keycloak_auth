@@ -1,0 +1,8 @@
+node_modules
+.nuxt
+dist
+.output
+.git
+.env
+*.log
+database.db  # Если не хочешь копировать БД в image (создастся заново)
