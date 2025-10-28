@@ -57,13 +57,21 @@ export default defineNuxtConfig({
     experimental: {
       openAPI: true
     },
-    devProxy: {
-      '/keycloak': {
-        target: 'http://keycloak:8080',
-        changeOrigin: Boolean(parseInt(process.env.KEYCLOAK_ORIGIN)),
-        rewrite: (path: string) => path.replace(/^\/keycloak/, ''),
-      },
-    }
+    // routeRules: {
+    //   // Прокси для /keycloak/** на Keycloak внутри Docker
+    //   '/keycloak/**': {
+    //     proxy: {
+    //       to: 'http://localhost:8180/keycloak/**',  // Оставь как есть
+    //       // changeOrigin: true,  // Изменяет Host-заголовок на keycloak:8080 (может помочь)
+    //       // secure: false,  // Игнорирует SSL-проверку (если Keycloak без HTTPS)
+    //       // headers: {
+    //       //   'Host': 'localhost:8180',  // Имитирует запрос на хост-порт (может помочь с субпутем)
+    //       //   'X-Forwarded-Host': 'localhost:3001',  // Для прокси
+    //       //   'X-Forwarded-Proto': 'http',  // Указывает протокол
+    //       // },
+    //     }
+    //   }
+    // }
   },
   scalar: {
     openapi: {
