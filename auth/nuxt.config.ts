@@ -1,55 +1,103 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  compatibilityDate: '2025-07-15',
+  compatibilityDate: '2024-04-03',
   devtools: { enabled: true },
+  srcDir: '.',
   modules: [
     '@nuxtjs/robots',
     '@nuxtjs/i18n',
     'nuxt-schema-org',
     'nuxt-security',
     'nuxt-api-party',
-    '@nuxtjs/html-validator',
     '@scalar/nuxt',
     '@nuxtjs/tailwindcss'
   ],
   css: [
     '@/assets/css/tailwind.css'
   ],
+  vite: {
+    optimizeDeps: {
+      include: ['debug']
+    },
+    server:{
+      hmr:{
+        overlay: true
+      }
+    },
+  },
+  typescript: {
+    compilerOptions: {
+      types: ["node"],
+    },
+    files: [],
+    references: [
+      { path: "./.nuxt/tsconfig.app.json"},
+      { path: "./.nuxt/tsconfig.server.json"},
+      { path: "./.nuxt/tsconfig.shared.json"},
+      { path: "./.nuxt/tsconfig.node.json"}
+    ]
+  },
   runtimeConfig: {
-    // public runtime config available on client-side as well
+
     public: {
       docsBase: '/docs',
-      // base URL for internal/external API calls used by the api-party plugin
-      apiBase: '/api/v1',
-      // optional default token (for development only)
-      apiToken: ''
+      apiBase: process.env.API_BASE+process.env.API_PATH || '/api/v1',
+      apiToken: process.env.API_TOKEN,
+      siteUrl: process.env.URL || 'http://localhost:3000',
+      keycloak:{
+        realm: process.env.KEYCLOAK_REALM,
+        username: process.env.KEYCLOAK_USER || process.env.KEYCLOAK_ADMIN,
+        password: process.env.KEYCLOAK_PASSWORD || process.env.KEYCLOAK_ADMIN_PASSWORD,
+        clientId: process.env.KEYCLOAK_CLIENT_ID,
+        clientSecret: process.env.KEYCLOAK_CLIENT_SECRET,
+      }
     }
   },
-  // nuxt-api-party example configuration (module-specific options may vary)
-  apiParty: ({
-    clients: {
-      default: {
-        baseURL: process.env.API_BASE || 'http://localhost:3000/api/v1',
-        // token will be set at runtime by the client plugin
-      }
+  nitro: {
+    experimental: {
+      openAPI: true
+    },
+    devProxy: {
+      '/keycloak': {
+        target: process.env.KEYCLOAK_TARGET,
+        changeOrigin: Boolean(parseInt(process.env.KEYCLOAK_ORIGIN)),
+        rewrite: (path: string) => path.replace(/^\/keycloak/, ''),
+      },
     }
-  } as any),
-  scalar: ({
-    // auto-generate OpenAPI from server routes and expose Swagger UI at /docs
+  },
+  scalar: {
     openapi: {
-      // where generated spec will be served
       path: '/docs/openapi.json',
-      // swagger-ui path
       ui: {
-        path: '/docs'
+        path: '/docs',
+        locale: false
       }
     }
-  } as any),
+  },
+  apiParty: {
+    endpoints: {
+      apiKeycloak: {
+        url: process.env.API_BASE+process.env.API_PATH || '${origin}/api/v1',
+        headers: {
+          Authorization: `Bearer ${process.env.API_TOKEN}`
+        }
+      }
+    },
+    client: true
+  },
   i18n: {
     locales: [
       { code: 'en', language: 'en-US' },
       { code: 'ru', language: 'ru-RU' }
     ],
     defaultLocale: 'en',
+  },
+  security: {
+    headers: {
+      contentSecurityPolicy: false,
+    },
+    corsHandler: {
+      origin: '*',
+    }
   }
 })

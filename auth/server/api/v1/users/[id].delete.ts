@@ -1,6 +1,11 @@
 /** dynamic imports used inside handler */
 
- 
+//  defineRouteMeta({
+//   openAPI: {
+//     description: 'Test route description',
+//     parameters: [{ in: "query", name: "test", required: true }],
+//   },
+// });
 
 /**
  * @summary Delete user by id

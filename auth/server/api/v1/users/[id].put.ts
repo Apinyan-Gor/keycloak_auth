@@ -1,5 +1,11 @@
 import { z } from 'zod'
 
+// defineRouteMeta({
+//   openAPI: {
+//     description: 'Test route description',
+//     parameters: [{ in: "query", name: "test", required: true }],
+//   },
+// });
 
 const bodySchema = z.object({
   name: z.string().min(1).optional(),

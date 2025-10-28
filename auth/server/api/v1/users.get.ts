@@ -1,5 +1,10 @@
 // dynamic imports for connection/initDb are used inside the handler
-
+// defineRouteMeta({
+//   openAPI: {
+//     description: 'Test route description',
+//     parameters: [{ in: "query", name: "test", required: true }],
+//   },
+// });
 /**
  * @summary Get list of users
  * @tags Users

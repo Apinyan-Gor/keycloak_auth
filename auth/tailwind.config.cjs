@@ -9,5 +9,11 @@ module.exports = {
   theme: {
     extend: {}
   },
+  compilerOptions: {
+    paths: {
+      "@/*": ["./*"]
+    }
+  },
   plugins: []
 }
+

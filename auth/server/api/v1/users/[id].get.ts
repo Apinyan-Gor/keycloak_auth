@@ -1,7 +1,12 @@
 /**
  * Uses dynamic imports to avoid static resolution issues in tooling
  */
-
+// defineRouteMeta({
+//   openAPI: {
+//     description: 'Test route description',
+//     parameters: [{ in: "query", name: "test", required: true }],
+//   },
+// });
 
 /**
  * @summary Get user by id

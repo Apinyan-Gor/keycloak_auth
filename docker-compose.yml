@@ -1,0 +1,42 @@
+services:
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env  # Подхватывает общие переменные из .env
+    command: start-dev
+    depends_on:
+      - nuxt-app  # Запускается после Nuxt (опционально)
+    networks:
+      - app-network
+
+  nuxt-app:
+    build:
+      context: .  # Использует текущую папку (твой проект Nuxt)
+      dockerfile_inline: |  # Встроенный Dockerfile прямо здесь (всё в одном файле!)
+        FROM node:20
+        WORKDIR /app
+        COPY ./auth/package*.json ./
+        RUN npm install
+        COPY ./auth .
+        EXPOSE 3000
+        CMD ["npm", "run", "dev"]
+    container_name: nuxt-app
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app  # Для hot-reload в dev
+      - /app/node_modules
+    env_file:
+      - .env  # Подхватывает общие переменные (например, DATABASE_URL для Prisma)
+    environment:
+      NODE_ENV: development  # Можно переопределить, если нужно
+    networks:
+      - app-network
+
+
+networks:
+  app-network:
+    driver: bridge

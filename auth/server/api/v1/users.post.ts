@@ -6,6 +6,7 @@ const bodySchema = z.object({
   email: z.string().email()
 })
 
+
 /**
  * @summary Create a user
  * @tags Users
